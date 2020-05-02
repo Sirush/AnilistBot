@@ -1,4 +1,4 @@
-﻿namespace MangaUpdater.Domain.AniList
+﻿namespace AniListBot.Domain
 {
     public enum AniListMediaListStatus
     {

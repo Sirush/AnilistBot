@@ -23,16 +23,15 @@ namespace AniListBot
             _client = new DiscordSocketClient();
             _config = BuildConfig(config);
 
-
             var services = ConfigureServices();
             services.GetRequiredService<CommandService>().Log += LogAsync;
 
             await _client.LoginAsync(TokenType.Bot, _config["token"]);
             await _client.StartAsync();
 
-            await services.GetRequiredService<CommandHandlingService>().InitializeAsync(_config["prefix"]);
+            await services.GetRequiredService<CommandHandlingService>().InitializeAsync(_config["prefix"],_config["regex"]);
             services.GetRequiredService<AnilistService>().Init(_config["userfile"]);
-
+            
             await Task.Delay(-1);
         }
 
