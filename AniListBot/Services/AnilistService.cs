@@ -185,7 +185,7 @@ namespace AniListBot.Services
                 builder = GetEmbed(userMediaInfos, media, url, 0);
                 var embed = builder.Build();
                 var message = await channel.SendMessageAsync(null, embed: embed)
-                                               .ConfigureAwait(false);
+                                           .ConfigureAwait(false);
                 await message.AddReactionAsync(new Emoji("\u2B05"));
                 await message.AddReactionAsync(new Emoji("\u27A1"));
                 _messages.Add(message.Id,
@@ -235,7 +235,7 @@ namespace AniListBot.Services
                     //Right
                     else if (Equals(reaction.Emote, new Emoji("\u27A1")))
                     {
-                        if (message.Value.CurrentPage < MathF.Ceiling((float)message.Value.MediaInfos.Count / PER_PAGE) - 1)
+                        if (message.Value.CurrentPage < MathF.Ceiling((float) message.Value.MediaInfos.Count / PER_PAGE) - 1)
                         {
                             message.Value.CurrentPage++;
                             var builder = GetEmbed(message.Value.MediaInfos, message.Value.Media, message.Value.MediaLink,
@@ -252,15 +252,23 @@ namespace AniListBot.Services
 
         private EmbedBuilder GetEmbed(List<UserMediaInfo> userMediaInfos, AniListMedia media, string url, int pagination)
         {
+            bool showPage = MathF.Ceiling((float) userMediaInfos.Count / PER_PAGE) > 1;
+            string footerText = "2AniB by @Sirus#0721";
+            if (showPage)
+                footerText = $"Page {pagination + 1}/{MathF.Ceiling((float) userMediaInfos.Count / PER_PAGE)} - 2AniB by @Sirus#0721";
+
+
             var mediaInfos = userMediaInfos.Skip(pagination * PER_PAGE).Take(pagination + 1 * PER_PAGE);
             var builder = new EmbedBuilder()
-                          .WithTitle($"Who saw {media.Title.UserPreferred}")
+                          .WithAuthor($"Anilist - Who has {(media.Type == AniListMediaType.ANIME ? "seen" : "read")}",
+                                      "https://pbs.twimg.com/profile_images/1236103622636834816/5TFL-AFz_400x400.png")
+                          .WithTitle($"{media.Title.UserPreferred}")
                           .WithUrl(url)
                           .WithColor(new Color(0x252425))
                           .WithFooter(footer =>
                           {
                               footer
-                                  .WithText($"Page {pagination + 1}/{MathF.Ceiling((float)userMediaInfos.Count / PER_PAGE)} - 2AniB by @Sirus#0721");
+                                  .WithText(footerText);
                           });
 
             foreach (var u in mediaInfos)
