@@ -192,6 +192,7 @@ namespace AniListBot.Services
                                            .ConfigureAwait(false);
                 await message.AddReactionAsync(new Emoji("\u2B05"));
                 await message.AddReactionAsync(new Emoji("\u27A1"));
+                await message.AddReactionAsync(new Emoji("\u274C"));
                 _messages.Add(message.Id,
                               new MessageInfo
                               {
@@ -202,6 +203,12 @@ namespace AniListBot.Services
                                   Media = media,
                                   MediaLink = url
                               });
+
+                Task.Run(async () =>
+                {
+                    await Task.Delay(1000 * 900);
+                    RemoveEmbed(message.Id);
+                });
             }
             catch (Exception e)
             {
@@ -247,6 +254,11 @@ namespace AniListBot.Services
                             var embed = builder.Build();
                             await message.Value.Message.ModifyAsync(properties => { properties.Embed = embed; });
                         }
+                    }
+                    //Delete
+                    else if (Equals(reaction.Emote, new Emoji("\u274C")))
+                    {
+                        await RemoveEmbed(cachedMessage.Id);
                     }
                 }
 
@@ -317,6 +329,19 @@ namespace AniListBot.Services
                           });
 
             return builder.Build();
+        }
+
+        public async Task RemoveEmbed(ulong messageId)
+        {
+            var message = _messages.First(m => m.Key == messageId);
+            await message.Value.Message.ModifyAsync(properties =>
+            {
+                properties.Content = $"<{message.Value.MediaLink}>";
+                properties.Embed = null;
+            });
+            await message.Value.Message.RemoveAllReactionsAsync();
+
+            _messages.Remove(messageId);
         }
 
         private async Task<bool> UserExists(string username)
