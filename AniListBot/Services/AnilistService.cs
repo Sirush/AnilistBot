@@ -264,9 +264,9 @@ namespace AniListBot.Services
                     {
                         await RemoveEmbed(cachedMessage.Id);
                     }
-                }
 
-                await message.Value.Message.RemoveReactionAsync(reaction.Emote, reaction.UserId);
+                    await message.Value.Message.RemoveReactionAsync(reaction.Emote, reaction.UserId);
+                }
             }
         }
 
