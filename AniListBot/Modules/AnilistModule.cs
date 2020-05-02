@@ -32,13 +32,13 @@ namespace AniListBot.Modules
         [Alias("link", "ani")]
         public Task GetAnilist(IUser user)
         {
-            var link = _anilist.GetUserLink(user.Id);
+            var userExists = _anilist.IsUserInDatabase(user.Id);
 
-            if (link == null)
+            if (!userExists)
                 return
                     ReplyAsync($"Sorry {Context.Message.Author.Mention}, the user **{user.Username}** hasn't added his account yet. You can add your account by doing $add AniListUserName.");
 
-            return ReplyAsync($"https://anilist.co/user/{link}/");
+            return ReplyAsync(embed: _anilist.GetUserEmbed(user.Id));
         }
 
         [Command("help")]

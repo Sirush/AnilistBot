@@ -84,13 +84,13 @@ namespace AniListBot.Services
         /// Gives a user anilist link if it exists
         /// </summary>
         /// <returns></returns>
-        public string GetUserLink(ulong userId)
+        public bool IsUserInDatabase(ulong userId)
         {
             var user = _users.FirstOrDefault(u => u.Id == userId);
             if (user == null)
-                return null;
+                return false;
 
-            return user.AnilistName;
+            return true;
         }
 
         /// <summary>
@@ -138,7 +138,8 @@ namespace AniListBot.Services
 
             cover.Name("coverImage").Select("large");
             title.Name("title").Select("romaji", "english", "native", "userPreferred");
-            query.Name("Media").Where("id", mediaId).Select("id").Select("type").Select("description").Select("averageScore").Select(title).Select(cover);
+            query.Name("Media").Where("id", mediaId).Select("id").Select("type").Select("description").Select("averageScore").Select(title)
+                 .Select(cover);
             try
             {
                 var json = await _getit.Get<string>(query);
@@ -259,14 +260,19 @@ namespace AniListBot.Services
             string footerText = "2AniB by @Sirus#0721";
             if (showPage)
                 footerText = $"Page {pagination + 1}/{MathF.Ceiling((float) userMediaInfos.Count / PER_PAGE)} - 2AniB by @Sirus#0721";
-            float serverAverageScore = userMediaInfos.Where(u => u.Score.Value != 0).Average(u => u.Score.Value);
+            var nonZeroScores = userMediaInfos.Where(u => u.Score.Value != 0);
+            float serverAverageScore = 0f;
+            if (nonZeroScores != null && nonZeroScores.Any())
+                serverAverageScore = nonZeroScores.Average(u => u.Score.Value);
 
             var mediaInfos = userMediaInfos.Skip(pagination * PER_PAGE).Take(pagination + 1 * PER_PAGE);
             var builder = new EmbedBuilder()
-                          .WithAuthor($"Anilist - Who has {(media.Type == AniListMediaType.ANIME ? "seen" : "read")}",
+                          .WithAuthor($"AniList - Who has {(media.Type == AniListMediaType.ANIME ? "seen" : "read")}",
                                       "https://pbs.twimg.com/profile_images/1236103622636834816/5TFL-AFz_400x400.png")
-                          .WithDescription($"```{media.Description.Trim().Substring(0,300)}```" +
-                                           $"Average scores : Server : **{serverAverageScore}** - Anilist **{media.AverageScore/10f}**")
+                          .WithDescription($"{media.Description.Trim().Replace("<br>", "").Substring(0, 300)}")
+                          .AddField("Average server score", $"**{serverAverageScore}**", true)
+                          .AddField("Average anilist score", $"**{media.AverageScore / 10f}**", true)
+                          .AddField("-", "-", true)
                           .WithThumbnailUrl(media.CoverImage.Large)
                           .WithTitle($"{media.Title.UserPreferred}")
                           .WithUrl(url)
@@ -283,6 +289,32 @@ namespace AniListBot.Services
             }
 
             return builder;
+        }
+
+        public Embed GetUserEmbed(ulong userId)
+        {
+            var user = _users.First(u => u.Id == userId);
+
+            var builder = new EmbedBuilder()
+                          .WithAuthor($"AniList",
+                                      "https://pbs.twimg.com/profile_images/1236103622636834816/5TFL-AFz_400x400.png")
+                          .WithThumbnailUrl(user.AniListUser.Avatar.Large)
+                          .WithTitle(user.AnilistName)
+                          .WithUrl($"https://anilist.co/user/{user.AnilistName}/")
+                          .WithColor(new Color(0x626944))
+                          .AddField("Anime stats", $"Days wasted **{(user.AniListUser.Statistics.Anime.MinutesWatched / 1440f):00.0}**\r" +
+                                                   $"Episodes watched **{user.AniListUser.Statistics.Anime.EpisodesWatched}**\r" +
+                                                   $"Mean score **{(user.AniListUser.Statistics.Anime.MeanScore / 10f):0.0}**", true)
+                          .AddField("Manga stats", $"Chapters read **{user.AniListUser.Statistics.Manga.ChaptersRead}**\r" +
+                                                   $"Volumes read **{user.AniListUser.Statistics.Manga.VolumesRead}**\r" +
+                                                   $"Mean score **{(user.AniListUser.Statistics.Manga.MeanScore / 10f):0.0}**", true)
+                          .WithFooter(footer =>
+                          {
+                              footer
+                                  .WithText("2AniB by @Sirus#0721");
+                          });
+
+            return builder.Build();
         }
 
         private async Task<bool> UserExists(string username)
@@ -315,7 +347,27 @@ namespace AniListBot.Services
         {
             user.Animes = await ScrapUserAnimes(user.AnilistName);
             user.Mangas = await ScrapUserMangas(user.AnilistName);
-            //Save();
+            user.AniListUser = await ScrapAnilistUser(user.AnilistName);
+        }
+
+        private async Task<AniListUser> ScrapAnilistUser(string anilistName)
+        {
+            IQuery query, statistics, anime, manga, avatar;
+
+            query = _getit.Query();
+            statistics = _getit.Query();
+            anime = _getit.Query();
+            manga = _getit.Query();
+            avatar = _getit.Query();
+
+            anime.Name("anime").Select("minutesWatched", "episodesWatched", "meanScore");
+            manga.Name("manga").Select("chaptersRead", "volumesRead", "meanScore");
+            statistics.Name("statistics").Select(anime).Select(manga);
+            avatar.Name("avatar").Select("large");
+            query.Name("User").Where("name", anilistName).Select(statistics).Select(avatar);
+
+            var json = await _getit.Get<string>(query);
+            return JsonUtils.Deserialize<AniListUser>(json, true);
         }
 
         private async Task<List<AniListMediaList>> ScrapUserAnimes(string anilistName)
