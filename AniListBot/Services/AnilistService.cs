@@ -138,7 +138,7 @@ namespace AniListBot.Services
 
             cover.Name("coverImage").Select("large");
             title.Name("title").Select("romaji", "english", "native", "userPreferred");
-            query.Name("Media").Where("id", mediaId).Select("id").Select("type").Select("description").Select(title).Select(cover);
+            query.Name("Media").Where("id", mediaId).Select("id").Select("type").Select("description").Select("averageScore").Select(title).Select(cover);
             try
             {
                 var json = await _getit.Get<string>(query);
@@ -259,13 +259,14 @@ namespace AniListBot.Services
             string footerText = "2AniB by @Sirus#0721";
             if (showPage)
                 footerText = $"Page {pagination + 1}/{MathF.Ceiling((float) userMediaInfos.Count / PER_PAGE)} - 2AniB by @Sirus#0721";
-
+            float serverAverageScore = userMediaInfos.Where(u => u.Score.Value != 0).Average(u => u.Score.Value);
 
             var mediaInfos = userMediaInfos.Skip(pagination * PER_PAGE).Take(pagination + 1 * PER_PAGE);
             var builder = new EmbedBuilder()
                           .WithAuthor($"Anilist - Who has {(media.Type == AniListMediaType.ANIME ? "seen" : "read")}",
                                       "https://pbs.twimg.com/profile_images/1236103622636834816/5TFL-AFz_400x400.png")
-                          .WithDescription($"```{media.Description.Trim().Substring(0,300)}```")
+                          .WithDescription($"```{media.Description.Trim().Substring(0,300)}```" +
+                                           $"Average scores : Server : **{serverAverageScore}** - Anilist **{media.AverageScore/10f}**")
                           .WithThumbnailUrl(media.CoverImage.Large)
                           .WithTitle($"{media.Title.UserPreferred}")
                           .WithUrl(url)
