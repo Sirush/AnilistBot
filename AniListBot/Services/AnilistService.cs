@@ -265,11 +265,13 @@ namespace AniListBot.Services
             if (nonZeroScores != null && nonZeroScores.Any())
                 serverAverageScore = nonZeroScores.Average(u => u.Score.Value);
 
+            var description = media.Description.Trim().Replace("<br>", "");
+
             var mediaInfos = userMediaInfos.Skip(pagination * PER_PAGE).Take(pagination + 1 * PER_PAGE);
             var builder = new EmbedBuilder()
                           .WithAuthor($"AniList - Who has {(media.Type == AniListMediaType.ANIME ? "seen" : "read")}",
                                       "https://pbs.twimg.com/profile_images/1236103622636834816/5TFL-AFz_400x400.png")
-                          .WithDescription($"{media.Description.Trim().Replace("<br>", "").Substring(0, 300)}")
+                          .WithDescription($"{description.Substring(0, Math.Min(description.Length, 300))}")
                           .AddField("Average server score", $"**{serverAverageScore}**", true)
                           .AddField("Average anilist score", $"**{media.AverageScore / 10f}**", true)
                           .AddField("-", "-", true)
