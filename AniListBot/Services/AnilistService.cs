@@ -190,8 +190,12 @@ namespace AniListBot.Services
                 var embed = builder.Build();
                 var message = await channel.SendMessageAsync(null, embed: embed)
                                            .ConfigureAwait(false);
-                await message.AddReactionAsync(new Emoji("\u2B05"));
-                await message.AddReactionAsync(new Emoji("\u27A1"));
+                if (MathF.Ceiling((float) userMediaInfos.Count / PER_PAGE) > 1)
+                {
+                    await message.AddReactionAsync(new Emoji("\u2B05"));
+                    await message.AddReactionAsync(new Emoji("\u27A1"));
+                }
+
                 await message.AddReactionAsync(new Emoji("\u274C"));
                 _messages.Add(message.Id,
                               new MessageInfo
@@ -206,8 +210,8 @@ namespace AniListBot.Services
 
                 Task.Run(async () =>
                 {
-                    await Task.Delay(1000 * 900);
-                    RemoveEmbed(message.Id);
+                    await Task.Delay(1000 * 200);
+                    await RemoveEmbed(message.Id);
                 });
             }
             catch (Exception e)
