@@ -45,7 +45,8 @@ namespace AniListBot.Modules
         [Alias("info")]
         public Task Help()
         {
-            return ReplyAsync("**$add AnilistUsername** - link your account to your anilist profile\n" +
+            return ReplyAsync("Post any anilist link to see who watched it! \n" +
+                              "**$add AnilistUsername** - link your account to your anilist profile\n" +
                               "**$remove** - remove the link to your anilist profile if you've made a mistake\n" +
                               "**$anilist** @someone - display someone anilist profile link\n" +
                               "**$help** - display this");
