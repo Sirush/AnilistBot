@@ -1,5 +1,6 @@
 using System;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -13,13 +14,16 @@ namespace AniListBot.Services
         private readonly CommandService _commands;
         private readonly DiscordSocketClient _discord;
         private readonly IServiceProvider _services;
+        private readonly AnilistService _anilist;
 
         private string _prefix;
+        private string _regex;
 
         public CommandHandlingService(IServiceProvider services)
         {
             _commands = services.GetRequiredService<CommandService>();
             _discord = services.GetRequiredService<DiscordSocketClient>();
+            _anilist = services.GetRequiredService<AnilistService>();
             _services = services;
 
             // Hook CommandExecuted to handle post-command-execution logic.
@@ -27,12 +31,14 @@ namespace AniListBot.Services
             // Hook MessageReceived so we can process each message to see
             // if it qualifies as a command.
             _discord.MessageReceived += MessageReceivedAsync;
+            _discord.ReactionAdded += ReactionAddedAsync;
         }
 
-        public async Task InitializeAsync(string prefix)
+        public async Task InitializeAsync(string prefix, string regex)
         {
             // Register modules that are public and inherit ModuleBase<T>.
             _prefix = prefix;
+            _regex = regex;
             await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
         }
 
@@ -45,6 +51,18 @@ namespace AniListBot.Services
             // This value holds the offset where the prefix ends
             var argPos = 0;
             // Perform prefix check. You may want to replace this with
+
+            if (message.Content.Contains("anilist"))
+            {
+                var match = Regex.Match(message.Content, _regex);
+                if (match.Success)
+                {
+                    var parse = Int32.TryParse(match.Groups[2].Value, out var id);
+                    if (parse)
+                        _anilist.CheckMedia(rawMessage, match.Value,id);
+                }
+            }
+
             if (!message.HasCharPrefix(_prefix[0], ref argPos))
                 return;
             // for a more traditional command format like !help.
@@ -71,6 +89,16 @@ namespace AniListBot.Services
 
             // the command failed, let's notify the user that something happened.
             await context.Channel.SendMessageAsync($"error: {result}");
+        }
+
+        private async Task ReactionAddedAsync(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel,
+                                              SocketReaction reaction)
+        {
+            var cachedMessage = await reaction.Channel.GetMessageAsync(reaction.MessageId);
+            if (reaction.UserId != _discord.CurrentUser.Id && cachedMessage.Author.Id == _discord.CurrentUser.Id)
+            {
+                await _anilist.ProcessReaction(reaction, cachedMessage);
+            }
         }
     }
 }

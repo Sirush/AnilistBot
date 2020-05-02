@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using MangaUpdater.Domain.AniList;
 
 namespace AniListBot.Domain
 {
