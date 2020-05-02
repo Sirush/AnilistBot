@@ -38,7 +38,7 @@ namespace AniListBot.Domain
         // public AniListMediaTrailer? Trailer { get; set; }
         public int? UpdatedAt { get; set; }
 
-        // public AniListMediaCoverImage? CoverImage { get; set; }
+        public AniListMediaCoverImage? CoverImage { get; set; }
         public string? BannerImage { get; set; }
         public List<string>? Genres { get; set; }
         public List<string>? Synonyms { get; set; }
