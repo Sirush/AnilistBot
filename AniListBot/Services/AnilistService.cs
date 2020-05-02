@@ -128,14 +128,17 @@ namespace AniListBot.Services
             var channel = sentMessage.Channel;
             await sentMessage.DeleteAsync();
 
-            IQuery query, title;
+            IQuery query, title, cover;
 
             List<UserMediaInfo> userMediaInfos = new List<UserMediaInfo>();
 
             query = _getit.Query();
             title = _getit.Query();
+            cover = _getit.Query();
+
+            cover.Name("coverImage").Select("large");
             title.Name("title").Select("romaji", "english", "native", "userPreferred");
-            query.Name("Media").Where("id", mediaId).Select("id").Select("type").Select(title);
+            query.Name("Media").Where("id", mediaId).Select("id").Select("type").Select("description").Select(title).Select(cover);
             try
             {
                 var json = await _getit.Get<string>(query);
@@ -262,6 +265,8 @@ namespace AniListBot.Services
             var builder = new EmbedBuilder()
                           .WithAuthor($"Anilist - Who has {(media.Type == AniListMediaType.ANIME ? "seen" : "read")}",
                                       "https://pbs.twimg.com/profile_images/1236103622636834816/5TFL-AFz_400x400.png")
+                          .WithDescription($"```{media.Description.Trim().Substring(0,300)}```")
+                          .WithThumbnailUrl(media.CoverImage.Large)
                           .WithTitle($"{media.Title.UserPreferred}")
                           .WithUrl(url)
                           .WithColor(new Color(0x252425))
