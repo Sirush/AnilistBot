@@ -7,6 +7,7 @@ namespace AniListBot.Domain
         public ulong Id { get; set; }
         public string Name { get; set; }
         public string AnilistName { get; set; }
+        public AniListUser AniListUser { get; set; }
         public List<AniListMediaList> Animes { get; set; }
         public List<AniListMediaList> Mangas { get; set; }
     }
