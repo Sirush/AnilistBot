@@ -302,7 +302,7 @@ namespace AniListBot.Services
                           .WithTitle(user.AnilistName)
                           .WithUrl($"https://anilist.co/user/{user.AnilistName}/")
                           .WithColor(new Color(0x626944))
-                          .AddField("Anime stats", $"Days wasted **{(user.AniListUser.Statistics.Anime.MinutesWatched / 1440f):00.0}**\r" +
+                          .AddField("Anime stats", $"Days wasted **{(user.AniListUser.Statistics.Anime.MinutesWatched / 1440f):0.0}**\r" +
                                                    $"Episodes watched **{user.AniListUser.Statistics.Anime.EpisodesWatched}**\r" +
                                                    $"Mean score **{(user.AniListUser.Statistics.Anime.MeanScore / 10f):0.0}**", true)
                           .AddField("Manga stats", $"Chapters read **{user.AniListUser.Statistics.Manga.ChaptersRead}**\r" +
