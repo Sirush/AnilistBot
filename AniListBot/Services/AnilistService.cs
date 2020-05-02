@@ -124,6 +124,10 @@ namespace AniListBot.Services
         /// </summary>
         public async void CheckMedia(SocketMessage sentMessage, string url, int mediaId)
         {
+            var authorId = sentMessage.Author.Id;
+            var channel = sentMessage.Channel;
+            await sentMessage.DeleteAsync();
+
             IQuery query, title;
 
             List<UserMediaInfo> userMediaInfos = new List<UserMediaInfo>();
@@ -180,16 +184,15 @@ namespace AniListBot.Services
 
                 builder = GetEmbed(userMediaInfos, media, url, 0);
                 var embed = builder.Build();
-                var message = await sentMessage.Channel.SendMessageAsync(null, embed: embed)
+                var message = await channel.SendMessageAsync(null, embed: embed)
                                                .ConfigureAwait(false);
                 await message.AddReactionAsync(new Emoji("\u2B05"));
                 await message.AddReactionAsync(new Emoji("\u27A1"));
-                await sentMessage.DeleteAsync();
                 _messages.Add(message.Id,
                               new MessageInfo
                               {
                                   CurrentPage = 0,
-                                  RequestAuthor = sentMessage.Author.Id,
+                                  RequestAuthor = authorId,
                                   MediaInfos = userMediaInfos,
                                   Message = message,
                                   Media = media,
