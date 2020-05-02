@@ -235,7 +235,7 @@ namespace AniListBot.Services
                     //Right
                     else if (Equals(reaction.Emote, new Emoji("\u27A1")))
                     {
-                        if (message.Value.CurrentPage < message.Value.MediaInfos.Count / PER_PAGE - 1)
+                        if (message.Value.CurrentPage < MathF.Ceiling((float)message.Value.MediaInfos.Count / PER_PAGE) - 1)
                         {
                             message.Value.CurrentPage++;
                             var builder = GetEmbed(message.Value.MediaInfos, message.Value.Media, message.Value.MediaLink,
@@ -260,7 +260,7 @@ namespace AniListBot.Services
                           .WithFooter(footer =>
                           {
                               footer
-                                  .WithText($"Page {pagination + 1}/{userMediaInfos.Count / PER_PAGE} - 2AniB by @Sirus#0721");
+                                  .WithText($"Page {pagination + 1}/{MathF.Ceiling((float)userMediaInfos.Count / PER_PAGE)} - 2AniB by @Sirus#0721");
                           });
 
             foreach (var u in mediaInfos)
