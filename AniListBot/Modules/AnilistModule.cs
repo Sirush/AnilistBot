@@ -30,6 +30,13 @@ namespace AniListBot.Modules
 
         [Command("anilist")]
         [Alias("link", "ani")]
+        public Task GetAnilistSelf()
+        {
+            return GetAnilist(Context.Message.Author);
+        }
+        
+        [Command("anilist")]
+        [Alias("link", "ani")]
         public Task GetAnilist(IUser user)
         {
             var userExists = _anilist.IsUserInDatabase(user.Id);
