@@ -378,7 +378,10 @@ namespace AniListBot.Services
         {
             user.Animes = await ScrapUserAnimes(user.AnilistName);
             user.Mangas = await ScrapUserMangas(user.AnilistName);
-            user.AniListUser = await ScrapAnilistUser(user.AnilistName);
+
+            var anilistUser = await ScrapAnilistUser(user.AnilistName);
+            if (anilistUser != null)
+                user.AniListUser = anilistUser;
         }
 
         private async Task<AniListUser> ScrapAnilistUser(string anilistName)
@@ -397,8 +400,17 @@ namespace AniListBot.Services
             avatar.Name("avatar").Select("large");
             query.Name("User").Where("name", anilistName).Select(statistics).Select(avatar);
 
-            var json = await _getit.Get<string>(query);
-            return JsonUtils.Deserialize<AniListUser>(json, true);
+            try
+            {
+                var json = await _getit.Get<string>(query);
+                return JsonUtils.Deserialize<AniListUser>(json, true);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
+            return null;
         }
 
         private async Task<List<AniListMediaList>> ScrapUserAnimes(string anilistName)
@@ -423,23 +435,30 @@ namespace AniListBot.Services
                 query.Name("MediaListCollection").Where("userName", anilistName).Where("type", currentType).Where("perChunk", 500)
                      .Where("chunk", currentChunk).Select("hasNextChunk").Select(select);
 
-                var json = await _getit.Get<string>(query);
-                var mediaCollection = JsonUtils.Deserialize<AniListMediaListCollection>(json, true);
-                if (mediaCollection?.Lists != null && mediaCollection.Lists.Count > 0)
+                try
                 {
-                    foreach (var l in mediaCollection.Lists)
+                    var json = await _getit.Get<string>(query);
+                    var mediaCollection = JsonUtils.Deserialize<AniListMediaListCollection>(json, true);
+                    if (mediaCollection?.Lists != null && mediaCollection.Lists.Count > 0)
                     {
-                        mediaEntries.AddRange(l.Entries);
+                        foreach (var l in mediaCollection.Lists)
+                        {
+                            mediaEntries.AddRange(l.Entries);
+                        }
                     }
-                }
-                else
-                {
-                    break;
-                }
+                    else
+                    {
+                        break;
+                    }
 
-                nextChunk = mediaCollection.HasNextChunk;
-                currentChunk++;
-                await Task.Delay(5000);
+                    nextChunk = mediaCollection.HasNextChunk;
+                    currentChunk++;
+                    await Task.Delay(5000);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
             }
 
             return mediaEntries;
@@ -467,23 +486,30 @@ namespace AniListBot.Services
                 query.Name("MediaListCollection").Where("userName", anilistName).Where("type", currentType).Where("perChunk", 500)
                      .Where("chunk", currentChunk).Select("hasNextChunk").Select(select);
 
-                var json = await _getit.Get<string>(query);
-                var mediaCollection = JsonUtils.Deserialize<AniListMediaListCollection>(json, true);
-                if (mediaCollection?.Lists != null && mediaCollection.Lists.Count > 0)
+                try
                 {
-                    foreach (var l in mediaCollection.Lists)
+                    var json = await _getit.Get<string>(query);
+                    var mediaCollection = JsonUtils.Deserialize<AniListMediaListCollection>(json, true);
+                    if (mediaCollection?.Lists != null && mediaCollection.Lists.Count > 0)
                     {
-                        mediaEntries.AddRange(l.Entries);
+                        foreach (var l in mediaCollection.Lists)
+                        {
+                            mediaEntries.AddRange(l.Entries);
+                        }
                     }
-                }
-                else
-                {
-                    break;
-                }
+                    else
+                    {
+                        break;
+                    }
 
-                nextChunk = mediaCollection.HasNextChunk;
-                currentChunk++;
-                await Task.Delay(5000);
+                    nextChunk = mediaCollection.HasNextChunk;
+                    currentChunk++;
+                    await Task.Delay(5000);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
             }
 
             return mediaEntries;
