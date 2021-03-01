@@ -1,1 +1,1 @@
-# AnilistBot
+# AnilistBot (Unofficial bot for AniList)
